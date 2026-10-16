@@ -10,7 +10,7 @@ Greetings/
 waste/
 uploads/
 model/
-static/
+public/
 users.json
 history.json
 .env

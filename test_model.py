@@ -1,23 +1,24 @@
 import os
-import cv2
 import mediapipe as mp
 import tensorflow as tf
 import numpy as np
+from PIL import Image
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-model = tf.keras.models.load_model("sign_model.h5", compile=False)
+project_dir = os.path.dirname(os.path.abspath(__file__))
+model = tf.keras.models.load_model(os.path.join(project_dir, 'sign_model.h5'), compile=False)
 
-raw_labels = np.load("labels.npy", allow_pickle=True).item()
+raw_labels = np.load(os.path.join(project_dir, 'labels.npy'), allow_pickle=True).item()
 
 labels = raw_labels if not isinstance(list(raw_labels.keys())[0], str) else {
     v: k for k, v in raw_labels.items()
 }
 
 if len(labels) != model.output_shape[-1]:
-    own_images_dir = os.path.join(os.path.dirname(__file__), 'dataset', 'own_images')
+    own_images_dir = os.path.join(project_dir, 'dataset', 'own_images')
     class_names = []
     if os.path.isdir(own_images_dir):
         class_names = sorted(
@@ -30,7 +31,7 @@ if len(labels) != model.output_shape[-1]:
         labels = dict(enumerate(class_names))
 
 base_options = python.BaseOptions(
-    model_asset_path='hand_landmarker.task'
+    model_asset_path=os.path.join(project_dir, 'hand_landmarker.task')
 )
 
 options = vision.HandLandmarkerOptions(
@@ -45,11 +46,9 @@ def predict_sign(frame):
 
     h, w, _ = frame.shape
 
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
     mp_image = mp.Image(
         image_format=mp.ImageFormat.SRGB,
-        data=rgb
+        data=frame
     )
 
     result = detector.detect(mp_image)
@@ -73,7 +72,7 @@ def predict_sign(frame):
 
             combined_crop = frame[ymin:ymax, xmin:xmax]
 
-            hand_img = cv2.resize(combined_crop, (64, 64))
+            hand_img = np.array(Image.fromarray(combined_crop).resize((64, 64)))
 
             hand_img = hand_img / 255.0
 

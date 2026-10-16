@@ -35,18 +35,12 @@ try:
 except ImportError:
     HAS_PIL = False
 
-try:
-    import cv2
-    HAS_CV2 = True
-except ImportError:
-    HAS_CV2 = False
-
 # ── App setup ───────────────────────────────────────────────────
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 app = Flask(
     __name__,
     template_folder=os.path.join(PROJECT_DIR, 'templates'),
-    static_folder=os.path.join(PROJECT_DIR, 'public', 'static'),
+    static_folder=os.path.join(PROJECT_DIR, 'static'),
     static_url_path='/static'
 )
 app.secret_key = os.environ.get('SECRET_KEY', 'signbridge-secret-key-change-in-production')
@@ -124,8 +118,6 @@ def decode_frame(b64_string: str):
     if HAS_PIL and HAS_NUMPY:
         img = Image.open(io.BytesIO(img_bytes)).convert('RGB')
         arr = np.array(img)
-        if HAS_CV2:
-            arr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
         return arr
     return img_bytes  # return raw bytes if PIL/numpy unavailable
 
@@ -307,7 +299,6 @@ def health():
         'status': 'ok',
         'numpy': HAS_NUMPY,
         'pillow': HAS_PIL,
-        'opencv': HAS_CV2,
         'time': datetime.datetime.utcnow().isoformat()
     })
 
@@ -319,5 +310,5 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
     print(f"\n🤟  SignBridge server starting on http://localhost:{port}")
-    print(f"   NumPy: {HAS_NUMPY} | Pillow: {HAS_PIL} | OpenCV: {HAS_CV2}\n")
+    print(f"   NumPy: {HAS_NUMPY} | Pillow: {HAS_PIL}\n")
     app.run(host='0.0.0.0', port=port, debug=debug)
