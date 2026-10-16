@@ -6,3 +6,4 @@ tensorflow==2.21.0
 mediapipe==0.10.35
 protobuf==7.35.0
 scikit-learn==1.8.0
+scikit-learn==1.8.0

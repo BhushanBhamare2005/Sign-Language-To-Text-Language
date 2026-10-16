@@ -4,6 +4,7 @@
     "web": {
       "root": ".",
       "entrypoint": "app.py",
+      "installCommand": "python -m pip install -r requirements.txt && python -m pip uninstall -y opencv-contrib-python && python -m pip install --no-deps opencv-contrib-python-headless==4.13.0.92",
       "functions": {
         "app.py": {
           "includeFiles": "{sign_model.h5,hand_landmarker.task,labels.npy,test_model.py,templates/**,static/**}",
