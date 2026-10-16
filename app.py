@@ -42,7 +42,13 @@ except ImportError:
     HAS_CV2 = False
 
 # ── App setup ───────────────────────────────────────────────────
-app = Flask(__name__, template_folder='templates', static_folder='static')
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(PROJECT_DIR, 'templates'),
+    static_folder=os.path.join(PROJECT_DIR, 'public', 'static'),
+    static_url_path='/static'
+)
 app.secret_key = os.environ.get('SECRET_KEY', 'signbridge-secret-key-change-in-production')
 CORS(app, supports_credentials=True)
 
