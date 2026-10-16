@@ -1,0 +1,28 @@
+# Python environments and caches
+.venv/
+venv/
+myenv/
+__pycache__/
+*.py[cod]
+
+# Local secrets and user data
+.env
+.env.*
+!.env.example
+users.json
+history.json
+uploads/*
+!uploads/.gitkeep
+
+# Training datasets and generated models
+dataset/
+ISL_Dataset/
+Greetings/
+waste/
+model/
+isl_model.h5
+isl_model.keras
+isl_image_model.h5
+
+# Deployment and editor state
+.vercel/

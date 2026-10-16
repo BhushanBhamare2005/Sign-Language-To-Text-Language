@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SignBridge — Sign Language to Text</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="overlay-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">🤟</div>
+      <div>
+        <div class="logo-text">SignBridge</div>
+        <div class="logo-sub">Sign Language Platform</div>
+      </div>
+    </div>
+    <h2 class="auth-title">Welcome back</h2>
+    <p class="auth-desc">Sign in to access your converter and history</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+    <p class="auth-switch">Don't have an account? <span onclick="showRegister()">Register</span></p>
+    <div id="loginError" class="auth-error"></div>
+  </div>
+</div>
+
+<!-- REGISTER OVERLAY -->
+<div id="registerOverlay" class="overlay-screen" style="display:none">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">🤟</div>
+      <div><div class="logo-text">SignBridge</div></div>
+    </div>
+    <h2 class="auth-title">Create account</h2>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="regName" placeholder="Arjun Kumar" />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="regEmail" placeholder="you@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="regPassword" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary" onclick="handleRegister()">Create Account</button>
+    <p class="auth-switch">Already have an account? <span onclick="showLogin()">Sign in</span></p>
+    <div id="registerError" class="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" class="layout" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-wrap">
+      <div class="logo-icon">🤟</div>
+      <div>
+        <div class="logo-text">SignBridge</div>
+        <div class="logo-sub">Sign → Text Platform</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" data-page="converter" onclick="navigate(this)">
+        <i class="ti ti-video"></i> Live Convert
+      </div>
+      <div class="nav-item" data-page="upload" onclick="navigate(this)">
+        <i class="ti ti-upload"></i> Upload Video
+      </div>
+      <div class="nav-item" data-page="history" onclick="navigate(this)">
+        <i class="ti ti-history"></i> History
+        <span class="nav-badge" id="histCount">0</span>
+      </div>
+      <div class="nav-section">Tools</div>
+      <div class="nav-item" data-page="translation" onclick="navigate(this)">
+        <i class="ti ti-language"></i> Translation
+      </div>
+      <div class="nav-item" data-page="dictionary" onclick="navigate(this)">
+        <i class="ti ti-book"></i> Sign Dictionary
+      </div>
+      <div class="nav-item" data-page="analytics" onclick="navigate(this)">
+        <i class="ti ti-chart-bar"></i> Analytics
+      </div>
+      <div class="nav-section">Account</div>
+      <div class="nav-item" data-page="profile" onclick="navigate(this)">
+        <i class="ti ti-user"></i> Profile
+      </div>
+      <div class="nav-item" data-page="settings" onclick="navigate(this)">
+        <i class="ti ti-settings"></i> Settings
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="avatar" id="userAvatar">AK</div>
+        <div class="user-info">
+          <p id="userName">Arjun K.</p>
+          <span id="userPlan">Pro Plan</span>
+        </div>
+        <div class="status-dot"></div>
+      </div>
+      <button class="logout-btn" onclick="handleLogout()">
+        <i class="ti ti-logout"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <h2 id="pageTitle">Live Converter</h2>
+      <span class="page-badge" id="statusBadge">● READY</span>
+      <button class="topbar-btn" onclick="shareResult()"><i class="ti ti-share"></i> Share</button>
+      <button class="topbar-btn" onclick="exportResult()"><i class="ti ti-download"></i> Export</button>
+    </div>
+
+    <!-- PAGES -->
+    <div class="content-wrap">
+
+      <!-- PAGE: CONVERTER -->
+      <div id="page-converter" class="page active">
+        <div class="content">
+          <div class="left-col">
+
+            <div class="panel">
+              <div class="panel-header">
+                <i class="ti ti-camera" style="color:var(--accent)"></i>
+                <h3>Camera Input</h3>
+                <div class="muted" id="signLangLabel">ASL · ISL · BSL</div>
+              </div>
+              <div class="video-area" id="videoArea">
+                <div class="video-placeholder" id="videoPlaceholder" onclick="toggleCamera()">
+                  <div class="cam-icon"><i class="ti ti-camera"></i></div>
+                  <p>Click to start camera</p>
+                  <small>Supports ASL, BSL, ISL and more</small>
+                </div>
+                <video id="videoFeed" autoplay muted style="display:none;width:100%;max-height:340px;object-fit:cover"></video>
+              </div>
+              <div class="upload-bar">
+                <button class="upload-btn" id="camBtn" onclick="toggleCamera()">
+                  <i class="ti ti-player-play" id="camIcon"></i>
+                  <span id="camText">Start Camera</span>
+                </button>
+                <button class="alt-btn" onclick="document.getElementById('fileInput').click()">
+                  <i class="ti ti-upload"></i> Upload Video
+                </button>
+                <input type="file" id="fileInput" accept="video/*" style="display:none" onchange="handleVideoUpload(event)"/>
+                <select id="signLangSelect" class="lang-select" style="margin-left:auto;max-width:130px">
+                  <option value="ASL">ASL</option>
+                  <option value="BSL">BSL</option>
+                  <option value="ISL">ISL</option>
+                  <option value="LSF">LSF</option>
+                  <option value="LSE">LSE</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <i class="ti ti-text-size" style="color:var(--accent2)"></i>
+                <h3>Recognized Text</h3>
+                <div class="muted" id="confLabel">Confidence: –</div>
+              </div>
+              <div class="output-area">
+                <div class="output-label">Output</div>
+                <div class="output-text" id="outputText">
+                  <span class="placeholder-hint">Converted text will appear here...</span>
+                </div>
+                <div class="output-actions">
+                  <button class="out-btn primary" onclick="copyOutput()"><i class="ti ti-copy"></i> Copy</button>
+                  <button class="out-btn" onclick="speakOutput()"><i class="ti ti-volume"></i> Speak</button>
+                  <button class="out-btn" onclick="clearOutput()"><i class="ti ti-refresh"></i> Clear</button>
+                  <button class="out-btn" onclick="saveToHistory()" style="margin-left:auto"><i class="ti ti-bookmark"></i> Save</button>
+                </div>
+              </div>
+              <div class="conf-bar">
+                <span class="conf-label">Confidence</span>
+                <div class="conf-track"><div class="conf-fill" id="confFill" style="width:0%"></div></div>
+                <span class="conf-pct" id="confPct">–</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="right-col">
+
+            <div class="panel lang-panel">
+              <div class="panel-header">
+                <i class="ti ti-language" style="color:var(--green)"></i>
+                <h3>Translate Output</h3>
+              </div>
+              <div class="panel-body">
+                <div class="lang-row">
+                  <select class="lang-select" id="fromLang">
+                    <option value="en">English</option>
+                  </select>
+                  <div class="swap-btn" onclick="swapLang()" title="Swap">
+                    <i class="ti ti-arrows-right-left"></i>
+                  </div>
+                  <select class="lang-select" id="toLang" onchange="translateOutput()">
+                    <option value="hi">Hindi</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="ar">Arabic</option>
+                    <option value="ja">Japanese</option>
+                    <option value="mr">Marathi</option>
+                    <option value="zh">Chinese</option>
+                    <option value="pt">Portuguese</option>
+                  </select>
+                </div>
+                <div class="translated-box" id="translatedBox">
+                  <div class="lang-tag" id="translatedLangTag">Hindi</div>
+                  <span class="placeholder-hint">Translation will appear here...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <i class="ti ti-chart-bar" style="color:var(--amber)"></i>
+                <h3>Session Stats</h3>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="val" id="statSigns" style="color:#4F8EF7">0</div>
+                  <div class="lbl">Signs Detected</div>
+                  <div class="delta up" id="statSignsDelta">This session</div>
+                </div>
+                <div class="stat-card">
+                  <div class="val" id="statAccuracy" style="color:#22C97A">–</div>
+                  <div class="lbl">Avg. Accuracy</div>
+                  <div class="delta up">Live</div>
+                </div>
+                <div class="stat-card">
+                  <div class="val" id="statLatency" style="color:#F59E0B">–</div>
+                  <div class="lbl">Latency</div>
+                  <div class="delta neutral">Real-time</div>
+                </div>
+                <div class="stat-card">
+                  <div class="val" id="statLangs" style="color:#7C5CF6">1</div>
+                  <div class="lbl">Languages</div>
+                  <div class="delta neutral">Active</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <i class="ti ti-history" style="color:var(--text2)"></i>
+                <h3>Recent History</h3>
+                <div class="muted" style="cursor:pointer;color:#4F8EF7" onclick="navigate(document.querySelector('[data-page=history]'))">View all</div>
+              </div>
+              <div class="history-list" id="recentHistory">
+                <div class="empty-state"><i class="ti ti-inbox"></i><p>No history yet</p></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: HISTORY -->
+      <div id="page-history" class="page">
+        <div class="page-content">
+          <div class="page-toolbar">
+            <input type="text" id="histSearch" placeholder="Search history..." onkeyup="filterHistory()" class="search-input"/>
+            <select class="lang-select" id="histFilter" onchange="filterHistory()" style="width:120px">
+              <option value="">All Languages</option>
+              <option value="ASL">ASL</option>
+              <option value="BSL">BSL</option>
+              <option value="ISL">ISL</option>
+            </select>
+            <button class="topbar-btn danger" onclick="clearHistory()"><i class="ti ti-trash"></i> Clear All</button>
+          </div>
+          <div class="history-full" id="historyFull">
+            <div class="empty-state large"><i class="ti ti-inbox"></i><p>No conversions saved yet.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: TRANSLATION -->
+      <div id="page-translation" class="page">
+        <div class="page-content">
+          <div class="panel" style="max-width:700px">
+            <div class="panel-header">
+              <i class="ti ti-language" style="color:var(--green)"></i>
+              <h3>Text Translation</h3>
+            </div>
+            <div class="panel-body" style="padding:20px">
+              <div class="lang-row" style="margin-bottom:16px">
+                <select class="lang-select" id="tFromLang">
+                  <option value="en">English</option>
+                  <option value="hi">Hindi</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                </select>
+                <div class="swap-btn"><i class="ti ti-arrows-right-left"></i></div>
+                <select class="lang-select" id="tToLang">
+                  <option value="hi">Hindi</option>
+                  <option value="es">Spanish</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="ar">Arabic</option>
+                  <option value="ja">Japanese</option>
+                  <option value="mr">Marathi</option>
+                </select>
+              </div>
+              <textarea id="tInputText" class="text-area" placeholder="Enter text to translate..." rows="5" oninput="liveTranslate()"></textarea>
+              <div class="translated-box" id="tOutput" style="margin-top:14px;min-height:80px">
+                <div class="lang-tag" id="tOutputLang">Hindi</div>
+                Translation will appear here...
+              </div>
+              <div class="output-actions" style="margin-top:12px">
+                <button class="out-btn primary" onclick="copyTranslation()"><i class="ti ti-copy"></i> Copy</button>
+                <button class="out-btn" onclick="speakTranslation()"><i class="ti ti-volume"></i> Speak</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: DICTIONARY -->
+      <div id="page-dictionary" class="page">
+        <div class="page-content">
+          <div class="page-toolbar">
+            <input type="text" id="dictSearch" placeholder="Search signs (e.g. Hello, Thank you...)" class="search-input" oninput="searchDictionary()"/>
+            <select class="lang-select" id="dictLang" onchange="searchDictionary()" style="width:120px">
+              <option value="ASL">ASL</option>
+              <option value="BSL">BSL</option>
+              <option value="ISL">ISL</option>
+            </select>
+          </div>
+          <div class="dict-grid" id="dictGrid"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: ANALYTICS -->
+      <div id="page-analytics" class="page">
+        <div class="page-content">
+          <div class="analytics-grid">
+            <div class="panel">
+              <div class="panel-header"><i class="ti ti-chart-line" style="color:var(--accent)"></i><h3>Conversions Over Time</h3></div>
+              <div class="chart-placeholder"><canvas id="lineChart" width="400" height="200"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header"><i class="ti ti-chart-donut" style="color:var(--accent2)"></i><h3>Languages Used</h3></div>
+              <div class="chart-placeholder"><canvas id="donutChart" width="300" height="200"></canvas></div>
+            </div>
+          </div>
+          <div class="stats-grid" style="margin-top:20px">
+            <div class="stat-card"><div class="val" id="totalConversions" style="color:#4F8EF7">0</div><div class="lbl">Total Conversions</div></div>
+            <div class="stat-card"><div class="val" id="totalSigns" style="color:#22C97A">0</div><div class="lbl">Total Signs</div></div>
+            <div class="stat-card"><div class="val" id="avgAccuracyAll" style="color:#F59E0B">–</div><div class="lbl">Overall Accuracy</div></div>
+            <div class="stat-card"><div class="val" id="streakDays" style="color:#7C5CF6">1</div><div class="lbl">Day Streak</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: PROFILE -->
+      <div id="page-profile" class="page">
+        <div class="page-content">
+          <div class="panel" style="max-width:500px">
+            <div class="panel-header"><i class="ti ti-user" style="color:var(--accent)"></i><h3>Your Profile</h3></div>
+            <div class="panel-body" style="padding:24px">
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+                <div class="avatar large" id="profileAvatar">AK</div>
+                <div>
+                  <div style="font-size:18px;font-weight:600" id="profileName">Arjun Kumar</div>
+                  <div style="color:var(--text2);font-size:13px" id="profileEmail">arjun@example.com</div>
+                  <span class="nav-badge" style="margin-top:6px;display:inline-block">Pro Plan</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="editName" placeholder="Your name" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="editEmail" placeholder="your@email.com" readonly/>
+              </div>
+              <div class="form-group">
+                <label>Preferred Sign Language</label>
+                <select class="lang-select" id="prefLang" style="width:100%">
+                  <option>ASL</option><option>BSL</option><option>ISL</option>
+                </select>
+              </div>
+              <button class="btn-primary" onclick="saveProfile()">Save Changes</button>
+              <div id="profileMsg" style="margin-top:10px;font-size:13px;color:var(--green)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: SETTINGS -->
+      <div id="page-settings" class="page">
+        <div class="page-content">
+          <div class="panel" style="max-width:500px">
+            <div class="panel-header"><i class="ti ti-settings" style="color:var(--accent)"></i><h3>Settings</h3></div>
+            <div class="panel-body" style="padding:24px">
+              <div class="setting-row">
+                <div><div class="setting-label">Auto-translate output</div><div class="setting-desc">Translate recognized text automatically</div></div>
+                <label class="toggle"><input type="checkbox" id="autoTranslate" checked/><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div><div class="setting-label">Text-to-Speech</div><div class="setting-desc">Speak output when recognized</div></div>
+                <label class="toggle"><input type="checkbox" id="autoSpeak"/><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div><div class="setting-label">Auto-save to history</div><div class="setting-desc">Save every conversion automatically</div></div>
+                <label class="toggle"><input type="checkbox" id="autoSave" checked/><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div><div class="setting-label">Dark Mode</div><div class="setting-desc">Use dark interface theme</div></div>
+                <label class="toggle"><input type="checkbox" id="darkMode" checked/><span class="slider"></span></label>
+              </div>
+              <div class="form-group" style="margin-top:16px">
+                <label>Model Confidence Threshold</label>
+                <input type="range" min="50" max="99" value="70" id="confThreshold" oninput="document.getElementById('confThreshVal').textContent=this.value+'%'"/>
+                <span id="confThreshVal" style="font-size:13px;color:var(--text2)">70%</span>
+              </div>
+              <div class="form-group">
+                <label>Backend API URL</label>
+                <input type="text" id="apiUrl" value="http://localhost:5000" />
+              </div>
+              <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+              <div id="settingsMsg" style="margin-top:10px;font-size:13px;color:var(--green)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: UPLOAD -->
+      <div id="page-upload" class="page">
+        <div class="page-content">
+          <div class="panel" style="max-width:600px">
+            <div class="panel-header"><i class="ti ti-upload" style="color:var(--accent)"></i><h3>Upload Video for Conversion</h3></div>
+            <div class="panel-body" style="padding:24px">
+              <div class="drop-zone" id="dropZone" onclick="document.getElementById('uploadFileInput').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+                <i class="ti ti-cloud-upload" style="font-size:40px;color:var(--accent)"></i>
+                <p>Click or drag & drop a video file</p>
+                <small>MP4, MOV, AVI — max 100MB</small>
+              </div>
+              <input type="file" id="uploadFileInput" accept="video/*" style="display:none" onchange="processUpload(event)"/>
+              <div id="uploadStatus" style="margin-top:16px"></div>
+              <div id="uploadResult" style="margin-top:16px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-wrap -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div id="toast" class="toast"></div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

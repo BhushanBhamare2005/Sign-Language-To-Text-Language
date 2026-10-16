@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/app.py" }
+  ],
+  "functions": {
+    "app.py": {
+      "includeFiles": "{sign_model.h5,hand_landmarker.task,labels.npy,test_model.py,templates/**,static/**}",
+      "excludeFiles": "{dataset/**,ISL_Dataset/**,Greetings/**,waste/**,venv/**,.venv/**,myenv/**,uploads/**,model/**,isl_model.h5,isl_model.keras,isl_image_model.h5}"
+    }
+  }
+}
