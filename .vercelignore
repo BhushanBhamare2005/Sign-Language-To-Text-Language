@@ -11,6 +11,7 @@ waste/
 uploads/
 model/
 public/
+hand_landmarker.task
 users.json
 history.json
 .env
